@@ -3,6 +3,7 @@ package customer;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.Scanner;
 
 import ShopConnector.ShopSQLConnection;
@@ -14,7 +15,7 @@ public class Payment
 	Scanner sc=new Scanner(System.in);
 	Connection con=null;
 	Statement stmt=null;
-	ResultSet rs=null,rs2=null;
+	ResultSet rs=null,rs2=null,rs3=null;
 	public void makePayment(int custId, float total)
 	{
 		try
@@ -23,7 +24,9 @@ public class Payment
 		System.out.println("Enter your account number");
 		int accno=sc.nextInt();
 		System.out.println("Enter your account password");
-		String pass=sc.next();		
+		String pass=sc.next();	
+		System.out.println("Enter your Shipping address");
+		String adderss=sc.nextLine();	
 		con=sscon.getShopConnection();
 		stmt=con.createStatement();			
 		rs=stmt.executeQuery("select * from bank where payment_bank_account_no="+accno+"and  password='"+pass+"'");
@@ -34,7 +37,7 @@ public class Payment
 			stmt.executeUpdate("update bank set bank_balance=10000 where payment_bank_account_no="+accno+" and  password='"+pass+"'");
 			
 			System.out.println("Your payment is done succesfully!!!!!!");
-			updateOrder(custId);
+			updateOrder(custId,total,adderss);
 			
 		}
 		else {
@@ -49,26 +52,25 @@ public class Payment
 		
 		
 	}
-	private void updateOrder(int custId) 
+	private void updateOrder(int custId, float total,String adderss) 
 	{
 		try
 		{
-			float total=0.0f;
+			
 			int pcount=1;
 			con=sscon.getShopConnection();
 			stmt=con.createStatement();			
 			rs=stmt.executeQuery("select * from shopping_cart where userid="+custId);
-			rs2=stmt.executeQuery("select name from customer where userid="+custId);
-			
+			stmt.executeUpdate("insert into shopping_order( userid,ORDER_DATE,SHIPPING_ADDRESS,orderTotal) values("+custId+","+new Date()+",'"+adderss+"',"+total+") ");
+			rs3=stmt.executeQuery("select Order_ID from shopping_order ORDER BY  Order_ID DESC LIMIT 1");
+			rs3.next();
+			int order_id=rs3.getInt(1);
 			while(rs.next())
 			{
-				rs2=stmt.executeQuery("select * from product where pid="+rs.getInt(2));
-				//update order and order_list and empty cart
-				//System.out.println(pcount+": "+rs2.getString(2)+"\tPrice"+rs2.getFloat(6));
-				
-				total=total+rs2.getFloat(6);
-				pcount++;							
-			}	
+				rs2=stmt.executeQuery("insert into order_list values("+order_id+","+rs.getInt(2)+",1)");
+											
+			}
+			stmt.executeUpdate("delete from shopping_cart where userid="+custId);
 		}
 		catch(Exception e)
 		{
