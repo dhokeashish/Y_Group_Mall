@@ -38,7 +38,7 @@ public class ShowList
 		{
 			while(true)
 			{
-				System.out.println("Select 1: Show the product list and add to cart.\n2:View cart.\n3:Checkout and show the bill.\n4: If you want to logout");
+				System.out.println("Select 1: Show the product list and add to cart.\n2:View cart.\n3:Show previous orders.\n4:Checkout and show the bill.\n5: If you want to logout");
 				int select=sc.nextInt();
 				switch(select)
 				{
@@ -87,11 +87,13 @@ public class ShowList
 						}						
 						
 					break;
-					
 					case 3:
-						addCartToDatabase(custId,ll);
+						showPreviousOrder(custId);
 					break;
 					case 4:
+						addCartToDatabase(custId,ll);
+					break;
+					case 5:
 						System.exit(0);
 					default:
 						System.out.println("Please select correct option");
@@ -103,6 +105,28 @@ public class ShowList
 			e.printStackTrace();
 		}
 	
+	}
+	private void showPreviousOrder(int custId)
+	{
+		try
+		{
+		int pcount=1;
+		con=sscon.getShopConnection();
+		stmt=con.createStatement();			
+		rs=stmt.executeQuery("select * from order_list,shopping_Order where shopping_order.order_id=order_list.order_id and product.pid=order_list.pid and shopping_order.userid="+custId);
+		
+		System.out.println("Your previous orders contains following products:\n");
+		while(rs.next())
+		{
+			System.out.println(pcount+": "+rs2.getString(1));
+			pcount++;							
+		}	
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
 	}
 	void addCartToDatabase(int custId, LinkedList<Integer> ll2) 
 	{
